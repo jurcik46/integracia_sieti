@@ -1,0 +1,43 @@
+heat_template_version: rocky
+
+description: server
+
+parameters:
+  flavor:
+    type: string
+    label: Flavor
+    default: nano
+  image:
+    type: string
+    label: first_img
+    default: cirros
+  net:
+    type: string
+    default: ext-net
+  zone:
+    type: string
+    label: zone_z
+    default: compute1
+
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      name: serverr
+      image: { get_param: image}
+      flavor: { get_param: flavor}
+      networks:
+        - network: { get_param: net}
+      availability_zone: {get_param: zone}
+  serverr:
+    type: OS::Nova::Server
+    properties:
+      name: server2
+      image: { get_param: image}
+      flavor: { get_param: flavor}
+      networks:
+        - network: { get_param: net}
+      availability_zone: {get_param: zone}
+
+
+
