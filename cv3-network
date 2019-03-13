@@ -44,14 +44,26 @@ resources:
             router: { get_resource: Router }
             port: { get_resource: RouterPort }
 
+    SecurityGrupa:
+        type: OS::Neutron::SecurityGroup
+        properties:
+            name: securityGrupa
+            rules: [
+            { direction: ingress, ethertype: IPv4, protocol: tcp, port_range_min: 22, port_range_max: 22, remote_ip_prefix: 158.193.0.0/16 },
+            { direction: ingress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 158.193.0.0/16 },
 
+            { direction: egress, ethertype: IPv4, protocol: tcp, port_range_min: 1, port_range_max: 65535, remote_ip_prefix: 0.0.0.0/0 },
+            { direction: egress, ethertype: IPv4, protocol: udp, port_range_min: 1, port_range_max: 65535, remote_ip_prefix: 0.0.0.0/0 },
 
+            { direction: egress, ethertype: IPv4, protocol: icmp, remote_ip_prefix: 0.0.0.0/0 }
+              ]
     JumpPort:
         type: OS::Neutron::Port
         properties:
             name: JumpPort
             network: { get_resource: Net }
-
+            security_groups:
+                - { get_resource: SecurityGrupa }
     Jump:
         type: OS::Nova::Server
         properties:
