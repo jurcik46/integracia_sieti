@@ -1,0 +1,83 @@
+heat_template_version: 2016-04-08
+
+description: v1.0.0 Template for network
+
+parameters:
+  NetName:
+    description: NetName
+    type: string
+    default: network
+
+  RouterName:
+    description: RouterName
+    type: string
+    default: router
+
+  PrivateSubnetCidr:
+    description: RouterCider
+    type: string
+    default: 10.0.0.0/24
+
+  SubName:
+    description: NameSub
+    type: string
+    default: mojSubnet
+
+resources:
+  Net:
+    type: OS::Neutron::Net
+    properties:
+      admin_state_up: True
+      name: { get_param: NetName }
+      shared: False
+
+  PrivateSubnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { get_param: SubName }
+      cidr: { get_param: PrivateSubnetCidr}
+      dns_nameservers:
+        - 8.8.8.8
+        - 8.8.4.4
+      enable_dhcp: True
+      network: { get_resource: Net }
+
+  Router:
+    type: OS::Neutron::Router
+    properties:
+      admin_state_up: True
+      name: { get_param: RouterName }
+      external_gateway_info: {
+        enable_snat: True,
+        network: ext-net
+      }
+
+  RouterPort:
+    type: OS::Neutron::Port
+    properties:
+      name: RouterPort
+      fixed_ips:
+        - ip_address: 10.0.0.1
+      network: { get_resource: Net }
+
+  RouterInterface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: { get_resource: Router }
+      port: { get_resource: RouterPort }
+
+  Jump:
+    type: OS::Nova::Server
+    properties:
+      name: jump
+      availability_zone: compute1
+      flavor: linux
+      image: ubuntu_server_18.04_amd64_OpenStack
+      user_data_update_policy: REPLACE
+      key_name: jano
+      networks:
+        - subnet: { get_resource: PrivateSubnet }
+      user_data_format: RAW
+      user_data:
+        #!/bin/bash
+        apt-get update -y
